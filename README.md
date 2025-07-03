@@ -70,6 +70,6 @@ minesible/
 
 Happy mining! ⛏️
 
-Built with ❤️ by to showcase the power of IaC automation.
+Built with ❤️ to showcase the power of IaC automation.
 
 ---
