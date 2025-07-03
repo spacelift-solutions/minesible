@@ -34,11 +34,13 @@ Spin up your own Minecraft server in minutes, with **persistent world saves to S
 
 ## 📦 Repository Structure
 
+```bash
 minesible/
 ├── stacks/
 │   ├── ansible/      # Ansible playbooks and inventory templates
 │   └── opentofu/     # OpenTofu (Terraform) infrastructure code
 └── README.md
+```
 
 ---
 
