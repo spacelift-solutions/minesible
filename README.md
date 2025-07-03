@@ -12,10 +12,6 @@ Spin up your own Minecraft server in minutes, with **persistent world saves to S
 ✅ Persist world saves to S3 buckets (passed as a TF_VAR 'TF_VAR_minecraft_s3_bucket' into spacelift)
 ✅ Uses Spacelift stack dependencies for clean IaC orchestration  
 
-Coming soon:
-- Self-service ready for customer blueprints  
-- Supports scheduled world backups (using scheduling via private workers)
-
 ---
 
 ## 🛠️ How it works
