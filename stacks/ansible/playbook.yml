@@ -1,0 +1,88 @@
+- hosts: minecraft
+  become: yes
+  tasks:
+    - name: Download and install Java 21
+      shell: |
+        curl -L -o /tmp/corretto.tar.gz https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz
+        mkdir -p /opt/corretto
+        tar -xzf /tmp/corretto.tar.gz -C /opt/corretto --strip-components=1
+        alternatives --install /usr/bin/java java /opt/corretto/bin/java 1
+      args:
+        executable: /bin/bash
+      when: not ansible_check_mode
+
+    - name: Set Java 21 as default
+      shell: |
+        alternatives --install /usr/bin/java java /opt/corretto/bin/java 1
+        alternatives --set java /opt/corretto/bin/java
+      args:
+        executable: /bin/bash
+
+    - name: Verify Java version
+      command: java -version
+
+    - name: Install unzip and AWS CLI
+      yum:
+        name: 
+          - unzip
+          - awscli
+        state: present
+        
+    - name: Create Minecraft directory
+      file:
+        path: /home/ec2-user/minecraft
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+
+    - name: Download Minecraft Server 1.21.7
+      get_url:
+        url: "https://piston-data.mojang.com/v1/objects/05e4b48fbc01f0385adb74bcff9751d34552486c/server.jar"
+        dest: /home/ec2-user/minecraft/server.jar
+      when: not ansible_check_mode
+
+    - name: Sync world from S3 bucket into running EC2 instance
+      shell: |
+        aws s3 cp s3://{{ lookup('env', 's3_bucket') }}/world.zip /tmp/world.zip || true
+        unzip -o /tmp/world.zip -d /home/ec2-user/minecraft || true
+      args:
+        executable: /bin/bash
+
+    - name: Accept EULA
+      copy:
+        dest: /home/ec2-user/minecraft/eula.txt
+        content: "eula=true"
+      when: not ansible_check_mode
+
+    - name: Copy server icon to Minecraft directory
+      copy:
+        src: /mnt/workspace/server-icon.png
+        dest: /home/ec2-user/minecraft/server-icon.png
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+
+    - name: Set server.properties file
+      copy:
+        src: server.properties
+        dest: /home/ec2-user/minecraft/server.properties 
+        mode: '0644'
+        owner: ec2-user
+        group: ec2-user
+
+    - name: Kill existing Minecraft server (if running) # This allows the server to restart and kick in new changes (eg. new server.properties)
+      shell: |
+        pgrep -f "server.jar" | xargs --no-run-if-empty kill
+      args:
+        executable: /bin/bash
+      ignore_errors: true
+      failed_when: false
+
+    - name: Start Minecraft Server
+      shell: |
+        cd /home/ec2-user/minecraft
+        nohup java -Xmx1024M -Xms1024M -jar server.jar nogui &
+      args:
+        executable: /bin/bash
+      when: not ansible_check_mode
