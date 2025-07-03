@@ -44,7 +44,7 @@
 
     - name: Sync world from S3 bucket into running EC2 instance
       shell: |
-        aws s3 cp s3://{{ lookup('env', 's3_bucket') }}/world.zip /tmp/world.zip || true
+        aws s3 cp s3://{{ lookup('env', 'S3_BUCKET') }}/world.zip /tmp/world.zip || true
         unzip -o /tmp/world.zip -d /home/ec2-user/minecraft || true
       args:
         executable: /bin/bash
