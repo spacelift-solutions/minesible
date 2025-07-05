@@ -13,7 +13,7 @@ variable "instance_type" {
 variable "motd" {
   description = "Minecraft server MOTD"
   type        = string
-  default     = "   \u00A75 [🧑‍🚀 spacelift managed minecraft server 🚀]\u00A7r\n         \u00A7d\u00A7ka\u00A7r ~ \u00A78\u00A7lminesible server 1.21.6\u00A7r ~ \u00A7d\u00A7ka\u00A7r"
+  default     = "   \u00A75 [🚀 spacelift managed minecraft server 🚀]\u00A7r\n         \u00A7d\u00A7ka\u00A7r ~ \u00A78\u00A7lminesible server 1.21.6\u00A7r ~ \u00A7d\u00A7ka\u00A7r"
 }
 
 variable "max_players" {
