@@ -63,13 +63,67 @@
         group: ec2-user
         mode: '0644'
 
-    - name: Set server.properties file
+    - name: Set server.properties dynamically
       copy:
-        src: server.properties
-        dest: /home/ec2-user/minecraft/server.properties 
-        mode: '0644'
+        dest: /home/ec2-user/minecraft/server.properties
+        content: |
+          enable-jmx-monitoring=false
+          rcon.port=25575
+          level-seed=
+          gamemode=creative
+          enable-command-block=false
+          enable-query=false
+          generator-settings={}
+          enforce-secure-profile=true
+          level-name=spacelift-world
+          level-type=minecraft:flat
+          motd={{ lookup('env', 'MOTD') }}
+          query.port=25565
+          pvp=true
+          generate-structures=true
+          max-chained-neighbor-updates=1000000
+          difficulty=easy
+          network-compression-threshold=256
+          max-tick-time=60000
+          require-resource-pack=false
+          use-native-transport=true
+          max-players={{ lookup('env', 'MAX_PLAYERS') }}
+          online-mode=true
+          allow-flight=false
+          broadcast-rcon-to-ops=true
+          view-distance=10
+          server-ip=
+          resource-pack-prompt=
+          allow-nether=true
+          server-port=25565
+          enable-rcon=false
+          sync-chunk-writes=true
+          op-permission-level=4
+          prevent-proxy-connections=false
+          hide-online-players=false
+          resource-pack=
+          entity-broadcast-range-percentage=100
+          simulation-distance=10
+          rcon.password=
+          player-idle-timeout=0
+          force-gamemode=false
+          rate-limit=0
+          hardcore=false
+          white-list=false
+          broadcast-console-to-ops=true
+          spawn-npcs=true
+          spawn-animals=true
+          function-permission-level=2
+          text-filtering-config=
+          spawn-monsters=true
+          enforce-whitelist=false
+          spawn-protection=16
+          resource-pack-sha1=
+          max-world-size=29999984
         owner: ec2-user
         group: ec2-user
+        mode: '0644'
+      when: not ansible_check_mode
 
     - name: Kill existing Minecraft server (if running) # This allows the server to restart and kick in new changes (eg. new server.properties)
       shell: |
