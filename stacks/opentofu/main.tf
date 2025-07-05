@@ -35,7 +35,7 @@ resource "aws_security_group" "minecraft_sg" {
 
 resource "aws_instance" "minecraft" {
   ami           = "ami-0c02fb55956c7d316" # Amazon Linux 2
-  instance_type = "t3.medium"
+  instance_type = var.instance_type # Blueprint option for users to select size (t3.medium is default)
   key_name      = "minesible-access"
   vpc_security_group_ids = [aws_security_group.minecraft_sg.id]
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
