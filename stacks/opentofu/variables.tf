@@ -19,5 +19,5 @@ variable "motd" {
 variable "max_players" {
   description = "Maximum number of players"
   type        = string
-  default     = 10
+  default     = "10"
 }
