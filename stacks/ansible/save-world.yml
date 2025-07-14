@@ -3,15 +3,15 @@
   become: true
   tasks:
 
-    #debug
+    #debug START
     - name: Debug - check for save files
       shell: |
         cd /home/ec2-user/minecraft
         ls -a
-        cd /world
+        cd /spacelift-world
         ls -a
-
-    #debug
+    #debug END
+    
     - name: Zip Minecraft world directory
       shell: |
         cd /home/ec2-user/minecraft && zip -r world.zip spacelift-world || true
