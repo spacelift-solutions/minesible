@@ -6,8 +6,13 @@ data "aws_vpc" "default" {
   default = true
 }
 
+# Generate a random suffix for unique resource names
+resource "random_id" "stack_id" {
+  byte_length = 4
+}
+
 resource "aws_security_group" "minecraft_sg" {
-  name_prefix = "minecraft-"
+  name_prefix = "minecraft-${random_id.stack_id.hex}-"
   description = "Allow SSH and Minecraft access"
   vpc_id      = data.aws_vpc.default.id
 
@@ -31,6 +36,10 @@ resource "aws_security_group" "minecraft_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = "minecraft-sg-${random_id.stack_id.hex}"
+  }
 }
 
 resource "aws_instance" "minecraft" {
@@ -41,7 +50,7 @@ resource "aws_instance" "minecraft" {
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
 
   tags = {
-    Name = "MinecraftServer"
+    Name = "MinecraftServer-${random_id.stack_id.hex}"
   }
 
   user_data = <<EOF
@@ -52,15 +61,18 @@ EOF
 }
 
 resource "aws_s3_bucket" "minecraft_saves" {
-
   # Logic here to use provided TF_var "minecraft_s3_bucket" - if none provided, use "minesible-world-backups-${random_id.bucket_id.hex}"
-  # "minesible-world-backups-${random_id.bucket_id.hex}" will be destoryed on infra teardown so it's recommend to save your files to a pre-created S3 bucket
+  # "minesible-world-backups-${random_id.bucket_id.hex}" will be destroyed on infra teardown so it's recommended to save your files to a pre-created S3 bucket
 
   bucket = var.minecraft_s3_bucket != null ? var.minecraft_s3_bucket : "minesible-world-backups-${random_id.bucket_id.hex}"
   force_destroy = true
 
   # Only create if we're not passing one as a variable
   count = var.minecraft_s3_bucket == null ? 1 : 0
+
+  tags = {
+    Name = "minecraft-saves-${random_id.stack_id.hex}"
+  }
 }
 
 resource "random_id" "bucket_id" {
@@ -68,7 +80,7 @@ resource "random_id" "bucket_id" {
 }
 
 resource "aws_iam_role" "ec2_s3_access" {
-  name = "ec2-minecraft-s3-access"
+  name = "ec2-minecraft-s3-access-${random_id.stack_id.hex}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -82,10 +94,14 @@ resource "aws_iam_role" "ec2_s3_access" {
       }
     ]
   })
+
+  tags = {
+    Name = "minecraft-ec2-role-${random_id.stack_id.hex}"
+  }
 }
 
 resource "aws_iam_role_policy" "s3_policy" {
-  name = "ec2-s3-full-access"
+  name = "ec2-s3-full-access-${random_id.stack_id.hex}"
   role = aws_iam_role.ec2_s3_access.id
 
   policy = jsonencode({
@@ -117,6 +133,10 @@ resource "aws_iam_role_policy" "s3_policy" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "minecraft-ec2-profile"
+  name = "minecraft-ec2-profile-${random_id.stack_id.hex}"
   role = aws_iam_role.ec2_s3_access.name
+
+  tags = {
+    Name = "minecraft-instance-profile-${random_id.stack_id.hex}"
+  }
 }
