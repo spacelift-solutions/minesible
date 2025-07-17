@@ -27,6 +27,10 @@
           - unzip
           - awscli
         state: present
+      register: yum_result
+      retries: 5
+      delay: 10
+      until: yum_result is succeeded
         
     - name: Create Minecraft directory
       file:
