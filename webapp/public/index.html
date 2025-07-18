@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesible - Minecraft Server Manager</title>
+    <style>
+        /* Remove the global animation disable - we'll be more selective */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: block;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            text-align: center;
+            margin: 5px;
+            min-width: 120px;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        /* Completely disable all animations on status elements */
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+            animation: none !important;
+            transform: none !important;
+        }
+
+        .status * {
+            animation: none !important;
+            transform: none !important;
+        }
+
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+
+        .status.loading {
+            background: #bee3f8;
+            color: #2a4365;
+            border: 1px solid #90cdf4;
+        }
+
+        .server-list {
+            grid-column: 1 / -1;
+        }
+
+        .server-item {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .server-logs-section {
+            grid-column: 1 / -1;
+        }
+
+        .server-info h3 {
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .server-info p {
+            color: #718096;
+            margin-bottom: 3px;
+        }
+
+        .server-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Safe loading spinner - only for specific elements */
+        .safe-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: safeSpin 0.8s linear infinite;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes safeSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Only apply to specific non-text elements */
+        .refresh-indicator {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refresh-indicator::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            animation: refreshProgress 1.5s ease-in-out infinite;
+        }
+
+        @keyframes refreshProgress {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .deletion-status {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                padding: 0 15px;
+            }
+            to {
+                opacity: 1;
+                max-height: 300px;
+                padding: 15px;
+            }
+        }
+
+        /* Ensure status text never animates */
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status, .status * {
+            animation: none !important;
+            transform: none !important;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Custom Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h3 {
+            margin-top: 0;
+            color: #dc3545;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .modal-content p {
+            margin: 15px 0;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .modal-content .highlight {
+            font-weight: bold;
+            color: #2d3748;
+            margin: 20px 0;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .modal-buttons .btn {
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .btn-save:hover {
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-delete-only {
+            background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+        }
+
+        .btn-delete-only:hover {
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn-cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        }
+
+        .btn-cancel:hover {
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.4);
+        }
+
+        /* Smooth refresh indicator */
+        .refreshing {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refreshing::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            animation: refreshProgress 1.5s ease-in-out infinite;
+        }
+
+        @keyframes refreshProgress {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        .deletion-status {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+                padding: 0 15px;
+            }
+            to {
+                opacity: 1;
+                max-height: 300px;
+                padding: 15px;
+            }
+        }
+
+        .deletion-status h4 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Status message for delete operations */
+        #status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+            text-align: center;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .server-item {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .server-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+
+            .modal-buttons .btn {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .card .server-list > div:first-child {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .card .server-list h2 {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://i.imgur.com/PNqflHV.png" alt="Minesible - The power of OpenTofu + Ansible" style="max-width: 100%; height: auto; margin-bottom: 20px; padding-top: 15px;" />
+            <p>Deploy and manage your Minecraft servers with ease</p>
+        </div>
+
+        <!-- Status message div for global feedback -->
+        <div id="status-message"></div>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>🚀 Create New Server</h2>
+                <form id="serverForm">
+                    <div class="form-group">
+                        <label for="instanceType">EC2 Instance Type</label>
+                        <select id="instanceType" name="instanceType" required>
+                            <option value="t3.micro">t3.micro (1 vCPU, 1GB RAM)</option>
+                            <option value="t3.small">t3.small (2 vCPU, 2GB RAM)</option>
+                            <option value="t3.medium" selected>t3.medium (2 vCPU, 4GB RAM)</option>
+                            <option value="t3.large">t3.large (2 vCPU, 8GB RAM)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="s3Bucket">S3 Bucket for World Saves</label>
+                        <input type="text" id="s3Bucket" name="s3Bucket" value="minesible-world-backup" placeholder="Enter S3 bucket name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="motd">Server Message of the Day</label>
+                        <textarea id="motd" name="motd" rows="3" placeholder="Welcome to Minesible!">Welcome to Minesible!</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxPlayers">Maximum Players</label>
+                        <input type="number" id="maxPlayers" name="maxPlayers" value="5" min="1" max="100">
+                    </div>
+
+                    <button type="submit" class="btn" id="deployButton">
+                        Deploy Server
+                    </button>
+                </form>
+
+                <div id="deployStatus" class="hidden"></div>
+            </div>
+        </div>
+
+        <div class="card server-list">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>🖥️ Active Minecraft Servers</h2>
+                <button id="refreshServers" class="btn btn-success">
+                    🔄 Refresh
+                </button>
+            </div>
+            <div id="serverList">
+                <div class="status">Loading server list...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MinecraftServerManager {
+            constructor() {
+                this.apiBaseUrl = '/api';
+                this.servers = [];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadServers();
+            }
+
+            bindEvents() {
+                document.getElementById('serverForm').addEventListener('submit', (e) => this.handleServerDeploy(e));
+                document.getElementById('refreshServers').addEventListener('click', () => this.loadServers());
+            }
+
+            async handleServerDeploy(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(e.target);
+                const deployData = {
+                    instanceType: formData.get('instanceType'),
+                    s3Bucket: formData.get('s3Bucket'),
+                    motd: formData.get('motd'),
+                    maxPlayers: parseInt(formData.get('maxPlayers'))
+                };
+
+                const submitBtn = document.getElementById('deployButton');
+                const statusDiv = document.getElementById('deployStatus');
+                
+                // Add safe spinner to button
+                submitBtn.innerHTML = 'Deploying...<span class="safe-spinner"></span>';
+                submitBtn.disabled = true;
+                
+                this.showStatus(statusDiv, 'loading', 'Deploying server... This may take a few minutes.');
+
+                try {
+                    const response = await this.apiCall('/deploy', 'POST', deployData);
+                    
+                    if (response.success) {
+                        this.showStatus(statusDiv, 'success', `Server deployment initiated! Stack ID: ${response.stackId}`);
+                        this.loadServers(); // Refresh server list
+                        e.target.reset(); // Clear form
+                    } else {
+                        throw new Error(response.error || 'Deployment failed');
+                    }
+                } catch (error) {
+                    this.showStatus(statusDiv, 'error', `Deployment failed: ${error.message}`);
+                } finally {
+                    // Restore button state
+                    submitBtn.innerHTML = 'Deploy Server';
+                    submitBtn.disabled = false;
+                }
+            }
+
+            async loadServers() {
+                const serverListDiv = document.getElementById('serverList');
+                const refreshBtn = document.getElementById('refreshServers');
+                
+                // Add safe spinner to refresh button
+                refreshBtn.innerHTML = 'Refreshing...<span class="safe-spinner"></span>';
+                refreshBtn.disabled = true;
+                
+                // Add subtle refresh indicator to the server list container
+                const serverListContainer = serverListDiv.parentElement;
+                serverListContainer.classList.add('refresh-indicator');
+                
+                // Don't clear the existing content - just show a subtle loading indicator
+                // Only show loading message if there are no servers currently displayed
+                if (this.servers.length === 0) {
+                    serverListDiv.innerHTML = '<div class="status">Loading servers...</div>';
+                }
+
+                try {
+                    const response = await this.apiCall('/servers', 'GET');
+                    
+                    if (response.success) {
+                        this.servers = response.servers;
+                        this.renderServers();
+                    } else {
+                        throw new Error(response.error || 'Failed to load servers');
+                    }
+                } catch (error) {
+                    // Only show error if we don't have existing servers to display
+                    if (this.servers.length === 0) {
+                        serverListDiv.innerHTML = `<div class="status error">Failed to load servers: ${error.message}</div>`;
+                    } else {
+                        // Show error in global status instead
+                        this.showGlobalStatus('error', `Failed to refresh servers: ${error.message}`);
+                    }
+                } finally {
+                    // Restore refresh button state
+                    refreshBtn.innerHTML = '🔄 Refresh';
+                    refreshBtn.disabled = false;
+                    serverListContainer.classList.remove('refresh-indicator');
+                }
+            }
+
+            renderServers() {
+                const serverListDiv = document.getElementById('serverList');
+                
+                if (this.servers.length === 0) {
+                    serverListDiv.innerHTML = '<div class="status">No servers found. Deploy your first server above!</div>';
+                    return;
+                }
+
+                // Store existing deletion logs before re-rendering
+                const existingLogs = {};
+                this.servers.forEach(server => {
+                    const deletionStatusDiv = document.getElementById(`deletion-status-${server.id}`);
+                    if (deletionStatusDiv && deletionStatusDiv.style.display !== 'none') {
+                        const logsContent = document.getElementById(`deletion-logs-${server.id}`);
+                        const toggleButton = document.getElementById(`logs-toggle-${server.id}`);
+                        if (logsContent && toggleButton) {
+                            existingLogs[server.id] = {
+                                content: logsContent.innerHTML,
+                                isExpanded: toggleButton.textContent === '▼',
+                                display: deletionStatusDiv.style.display
+                            };
+                        }
+                    }
+                });
+
+                // Re-render servers
+                serverListDiv.innerHTML = this.servers.map(server => this.renderServer(server)).join('');
+                
+                // Restore deletion logs after re-rendering
+                Object.keys(existingLogs).forEach(serverId => {
+                    const logData = existingLogs[serverId];
+                    const deletionStatusDiv = document.getElementById(`deletion-status-${serverId}`);
+                    const logsContent = document.getElementById(`deletion-logs-${serverId}`);
+                    const toggleButton = document.getElementById(`logs-toggle-${serverId}`);
+                    
+                    if (deletionStatusDiv && logsContent && toggleButton) {
+                        deletionStatusDiv.style.display = logData.display;
+                        logsContent.innerHTML = logData.content;
+                        toggleButton.textContent = logData.isExpanded ? '▼' : '▶';
+                        
+                        // Restore expanded/collapsed state
+                        if (logData.isExpanded) {
+                            logsContent.style.maxHeight = '200px';
+                            logsContent.style.padding = '';
+                        } else {
+                            logsContent.style.maxHeight = '0px';
+                            logsContent.style.padding = '0';
+                        }
+                    }
+                });
+            }
+
+            renderServer(server) {
+                const statusColor = this.getStatusColor(server.status);
+                const serverIcon = server.isManual ? '🔧' : '🎮';
+                const serverType = server.isManual ? 'Manual Deployment' : 'Blueprint Deployment';
+                
+                // Fix date display - handle invalid dates
+                const formatDate = (dateString) => {
+                    if (!dateString) return 'Unknown';
+                    const date = new Date(dateString);
+                    // Check if date is valid and not the Unix epoch (1970)
+                    if (isNaN(date.getTime()) || date.getFullYear() < 2020) {
+                        return 'Unknown';
+                    }
+                    return date.toLocaleString();
+                };
+                
+                return `
+                    <div class="server-item" id="server-${server.id}">
+                        <div class="server-info">
+                            <h3>${serverIcon} ${server.name}</h3>
+                            <p style="font-size: 0.9em; color: #718096; margin-bottom: 8px;"><em>${serverType}</em></p>
+                            <p><strong>Overall Status:</strong> <span style="color: ${statusColor};">${server.status}</span></p>
+                            <p><strong>Server IP:</strong> ${server.ip || 'Pending...'}</p>
+                            <p><strong>Instance Type:</strong> ${server.instanceType}</p>
+                            <p><strong>Max Players:</strong> ${server.maxPlayers}</p>
+                            <p><strong>Created:</strong> ${formatDate(server.created)}</p>
+                            <div style="margin-top: 10px; font-size: 0.9em; color: #718096;">
+                                <strong>Stack Details:</strong><br>
+                                • OpenTofu: ${server.opentofu ? `${server.opentofu.name} (${server.opentofu.status})` : 'Not found'}<br>
+                                • Ansible: ${server.ansible ? `${server.ansible.name} (${server.ansible.status})` : 'Not found'}
+                            </div>
+                        </div>
+                        
+                        <div class="server-actions">
+                            ${this.renderServerActions(server)}
+                        </div>
+                        
+                        <!-- Full-width sections below the main content -->
+                        <div class="server-logs-section" style="grid-column: 1 / -1; margin-top: 15px;">
+                            <!-- Deletion status area (initially hidden) -->
+                            <div id="deletion-status-${server.id}" class="deletion-status" style="display: none; margin-bottom: 10px; padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #3182ce;">
+                                <div class="logs-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer;" onclick="manager.toggleLogs('${server.id}')">
+                                    <h4 style="margin: 0; color: #2d3748;">🔄 Deletion Progress</h4>
+                                    <button class="logs-toggle" id="logs-toggle-${server.id}" style="background: none; border: none; font-size: 1.2em; cursor: pointer; color: #4a5568; padding: 4px;">
+                                        ▼
+                                    </button>
+                                </div>
+                                <div id="deletion-logs-${server.id}" class="logs-content" style="font-family: monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto; transition: max-height 0.3s ease;">
+                                    <!-- Status updates will be inserted here -->
+                                </div>
+                            </div>
+
+                            <!-- Spacelift Logs section (initially hidden) -->
+                            <div id="spacelift-logs-${server.id}" class="spacelift-logs" style="display: none; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #6f42c1;">
+                                <div class="logs-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; cursor: pointer;" onclick="manager.toggleSpaceliftLogs('${server.id}')">
+                                    <h4 style="margin: 0; color: #2d3748;">📋 Run History Logs</h4>
+                                    <div style="display: flex; gap: 8px; align-items: center;">
+                                        <button class="btn" style="padding: 4px 8px; font-size: 0.8em;" onclick="event.stopPropagation(); manager.loadSpaceliftLogs('${server.id}')">
+                                            Load History
+                                        </button>
+                                        <button class="logs-toggle" id="spacelift-toggle-${server.id}" style="background: none; border: none; font-size: 1.2em; cursor: pointer; color: #4a5568; padding: 4px;">
+                                            ▼
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="spacelift-logs-content-${server.id}" class="logs-content" style="font-family: monospace; font-size: 0.8em; max-height: 300px; overflow-y: auto; background: #1a1a1a; color: #00ff00; padding: 10px; border-radius: 4px; transition: max-height 0.3s ease;">
+                                    <div style="color: #888;">Click "Load History" to fetch Spacelift run history...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            getStatusColor(status) {
+                switch (status) {
+                    case 'Ready': return '#38a169';
+                    case 'Failed': return '#e53e3e';
+                    case 'Deploying': return '#3182ce';
+                    case 'Planning': return '#805ad5';
+                    case 'Pending Confirmation': return '#d69e2e';
+                    case 'Incomplete': return '#e53e3e';
+                    default: return '#718096';
+                }
+            }
+
+            renderServerActions(server) {
+                const canSave = server.ansible && server.ansible.status === 'FINISHED';
+                const canDelete = server.opentofu || server.ansible; // Can delete if at least one stack exists
+                const primaryStackId = server.opentofu ? server.opentofu.id : (server.ansible ? server.ansible.id : null);
+                
+                return `
+                    <button class="btn btn-success" 
+                            onclick="manager.saveWorld('${primaryStackId}')" 
+                            ${!canSave ? 'disabled' : ''}>
+                        💾 Save World
+                        <span class="loading hidden"></span>
+                    </button>
+                    <button class="btn btn-danger" 
+                            onclick="manager.deleteServer('${primaryStackId}', '${server.name}', '${server.id}')"
+                            ${!canDelete ? 'disabled' : ''}>
+                        🗑️ Delete Server
+                        <span class="loading hidden"></span>
+                    </button>
+                    <button class="btn" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);" 
+                            onclick="manager.showSpaceliftLogs('${server.id}')">
+                        📋 View History
+                        <span class="loading hidden"></span>
+                    </button>
+                `;
+            }
+
+            async saveWorld(serverId) {
+                const server = this.servers.find(s => s.id === serverId);
+                if (!server) return;
+
+                const confirmSave = confirm(`Save world for server "${server.name}"?`);
+                if (!confirmSave) return;
+
+                this.showGlobalStatus('loading', 'Saving world...');
+
+                try {
+                    const response = await this.apiCall(`/servers/${serverId}/save`, 'POST');
+                    
+                    if (response.success) {
+                        this.showGlobalStatus('success', 'World save initiated! Check your server logs for progress.');
+                    } else {
+                        throw new Error(response.error || 'Save failed');
+                    }
+                } catch (error) {
+                    this.showGlobalStatus('error', `Failed to save world: ${error.message}`);
+                }
+            }
+
+            async deleteServer(serverId, serverName, serverDisplayId) {
+                // Show custom modal for delete confirmation
+                return new Promise((resolve) => {
+                    const modal = this.createDeleteModal(serverId, serverName, serverDisplayId, resolve);
+                    document.body.appendChild(modal);
+                });
+            }
+
+            createDeleteModal(serverId, serverName, serverDisplayId, resolve) {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h3>⚠️ Delete Server</h3>
+                        <p>Are you sure you want to delete server:</p>
+                        <p class="highlight">"${serverName}"</p>
+                        <p>This action cannot be undone and will destroy all AWS resources.</p>
+                        <p class="highlight">Would you like to save the world to S3 first?</p>
+                        <div class="modal-buttons">
+                            <button class="btn btn-save" id="save-and-delete">
+                                💾 Save & Delete
+                            </button>
+                            <button class="btn btn-delete-only" id="delete-only">
+                                🗑️ Delete Only
+                            </button>
+                            <button class="btn btn-cancel" id="cancel-delete">
+                                ❌ Cancel
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Handle button clicks
+                modal.querySelector('#save-and-delete').onclick = () => {
+                    document.body.removeChild(modal);
+                    this.performDelete(serverId, true, serverDisplayId);
+                    resolve();
+                };
+
+                modal.querySelector('#delete-only').onclick = () => {
+                    document.body.removeChild(modal);
+                    this.performDelete(serverId, false, serverDisplayId);
+                    resolve();
+                };
+
+                modal.querySelector('#cancel-delete').onclick = () => {
+                    document.body.removeChild(modal);
+                    resolve();
+                };
+
+                // Close modal when clicking outside
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        document.body.removeChild(modal);
+                        resolve();
+                    }
+                };
+
+                return modal;
+            }
+
+            async performDelete(serverId, saveWorld, serverDisplayId) {
+                // Show deletion status in the specific server card
+                this.showServerDeletionStatus(serverDisplayId, 'Starting deletion process...');
+                
+                // Hide global status message since we're using server-specific status
+                const globalStatus = document.getElementById('status-message');
+                if (globalStatus) {
+                    globalStatus.style.display = 'none';
+                }
+
+                try {
+                    const response = await this.apiCall(`/servers/${serverId}`, 'DELETE', {
+                        saveWorld: saveWorld
+                    });
+                    
+                    if (response.success) {
+                        // Show detailed status updates if available
+                        if (response.statusUpdates && response.statusUpdates.length > 0) {
+                            this.showServerDetailedStatus(serverDisplayId, response.statusUpdates);
+                        } else {
+                            this.showServerDeletionStatus(serverDisplayId, 'Deletion completed! Check Spacelift for progress.', 'success');
+                        }
+                        
+                        // Don't auto-refresh when deletion logs are present
+                        // Let user manually refresh to see updated server list
+                        console.log('Deletion completed - logs will remain visible. Refresh manually to update server list.');
+                        
+                    } else {
+                        this.showServerDeletionStatus(serverDisplayId, `Deletion failed: ${response.error}`, 'error');
+                    }
+                } catch (error) {
+                    this.showServerDeletionStatus(serverDisplayId, `Failed to delete server: ${error.message}`, 'error');
+                }
+            }
+
+            showServerDeletionStatus(serverDisplayId, message, type = 'info') {
+                const statusDiv = document.getElementById(`deletion-status-${serverDisplayId}`);
+                const logsDiv = document.getElementById(`deletion-logs-${serverDisplayId}`);
+                
+                if (statusDiv && logsDiv) {
+                    statusDiv.style.display = 'block';
+                    logsDiv.innerHTML = `
+                        <div style="padding: 5px; background: ${this.getUpdateBackgroundColor(type)}; border-radius: 4px; margin: 2px 0;">
+                            <span style="color: ${this.getUpdateTextColor(type)}; font-weight: bold;">
+                                ${this.getUpdateIcon(type)}
+                            </span>
+                            <span style="color: #718096; font-size: 0.8em;">
+                                ${new Date().toLocaleTimeString()}
+                            </span>
+                            <br>
+                            <span style="color: #2d3748;">
+                                ${message}
+                            </span>
+                        </div>
+                    `;
+                }
+            }
+
+            showServerDetailedStatus(serverDisplayId, statusUpdates) {
+                const statusDiv = document.getElementById(`deletion-status-${serverDisplayId}`);
+                const logsDiv = document.getElementById(`deletion-logs-${serverDisplayId}`);
+                
+                if (statusDiv && logsDiv) {
+                    statusDiv.style.display = 'block';
+                    
+                    // Create detailed status display
+                    const statusHtml = statusUpdates.map(update => `
+                        <div style="margin: 3px 0; padding: 8px; border-radius: 4px; background: ${this.getUpdateBackgroundColor(update.type)};">
+                            <span style="color: ${this.getUpdateTextColor(update.type)}; font-weight: bold;">
+                                ${this.getUpdateIcon(update.type)}
+                            </span>
+                            <span style="color: #718096; font-size: 0.8em;">
+                                ${new Date(update.timestamp).toLocaleTimeString()}
+                            </span>
+                            <br>
+                            <span style="color: #2d3748;">
+                                ${update.message}
+                            </span>
+                        </div>
+                    `).join('');
+                    
+                    // Check if there are any errors in the status updates
+                    const hasErrors = statusUpdates.some(update => update.type === 'error');
+                    const hasSuccesses = statusUpdates.some(update => update.type === 'success');
+                    
+                    let completionMessage = '';
+                    if (hasErrors && hasSuccesses) {
+                        // Partial success
+                        completionMessage = `
+                            <div style="text-align: center; margin-top: 10px; padding: 8px; background: #fefcbf; border-radius: 4px; border: 1px solid #d69e2e;">
+                                <strong style="color: #d69e2e;">⚠️ Deletion completed with errors!</strong><br>
+                                <span style="color: #744210; font-size: 0.8em;">Some stacks deleted successfully, others failed. Check logs above for details.</span><br>
+                                <span style="color: #744210; font-size: 0.8em;">You may need to manually clean up remaining resources in Spacelift.</span>
+                            </div>
+                        `;
+                    } else if (hasErrors) {
+                        // All failed
+                        completionMessage = `
+                            <div style="text-align: center; margin-top: 10px; padding: 8px; background: #fed7d7; border-radius: 4px; border: 1px solid #e53e3e;">
+                                <strong style="color: #e53e3e;">❌ Deletion failed!</strong><br>
+                                <span style="color: #742a2a; font-size: 0.8em;">The deletion process encountered errors. Check logs above for details.</span><br>
+                                <span style="color: #742a2a; font-size: 0.8em;">Try again later or manually delete in Spacelift.</span>
+                            </div>
+                        `;
+                    } else {
+                        // All successful
+                        completionMessage = `
+                            <div style="text-align: center; margin-top: 10px; padding: 8px; background: #f0fff4; border-radius: 4px; border: 1px solid #38a169;">
+                                <strong style="color: #38a169;">✅ Deletion process completed successfully!</strong><br>
+                                <span style="color: #22543d; font-size: 0.8em;">Click the Refresh button to update the server list</span>
+                            </div>
+                        `;
+                    }
+                    
+                    logsDiv.innerHTML = statusHtml + completionMessage;
+                    
+                    // Scroll to bottom of logs
+                    logsDiv.scrollTop = logsDiv.scrollHeight;
+                    
+                    // Keep the logs section visible and expanded
+                    const toggleButton = document.getElementById(`logs-toggle-${serverDisplayId}`);
+                    if (toggleButton) {
+                        toggleButton.textContent = '▼'; // Ensure it's expanded
+                    }
+                    
+                    // Don't auto-refresh when there are deletion logs visible
+                    // Let user manually refresh to see updated server list
+                    console.log('Deletion logs are visible - skipping auto-refresh to preserve logs');
+                }
+            }
+
+            toggleLogs(serverDisplayId) {
+                const logsDiv = document.getElementById(`deletion-logs-${serverDisplayId}`);
+                const toggleButton = document.getElementById(`logs-toggle-${serverDisplayId}`);
+                
+                if (logsDiv && toggleButton) {
+                    const isExpanded = logsDiv.style.maxHeight !== '0px' && logsDiv.style.maxHeight !== '';
+                    
+                    if (isExpanded) {
+                        // Collapse
+                        logsDiv.style.maxHeight = '0px';
+                        logsDiv.style.padding = '0';
+                        toggleButton.textContent = '▶';
+                    } else {
+                        // Expand
+                        logsDiv.style.maxHeight = '200px';
+                        logsDiv.style.padding = '';
+                        toggleButton.textContent = '▼';
+                    }
+                }
+            }
+
+            showSpaceliftLogs(serverDisplayId) {
+                const spaceliftLogsDiv = document.getElementById(`spacelift-logs-${serverDisplayId}`);
+                if (spaceliftLogsDiv) {
+                    spaceliftLogsDiv.style.display = 'block';
+                }
+            }
+
+            toggleSpaceliftLogs(serverDisplayId) {
+                const logsDiv = document.getElementById(`spacelift-logs-content-${serverDisplayId}`);
+                const toggleButton = document.getElementById(`spacelift-toggle-${serverDisplayId}`);
+                
+                if (logsDiv && toggleButton) {
+                    const isExpanded = logsDiv.style.maxHeight !== '0px' && logsDiv.style.maxHeight !== '';
+                    
+                    if (isExpanded) {
+                        // Collapse
+                        logsDiv.style.maxHeight = '0px';
+                        logsDiv.style.padding = '0';
+                        toggleButton.textContent = '▶';
+                    } else {
+                        // Expand
+                        logsDiv.style.maxHeight = '300px';
+                        logsDiv.style.padding = '10px';
+                        toggleButton.textContent = '▼';
+                    }
+                }
+            }
+
+            async loadSpaceliftLogs(serverDisplayId) {
+                const server = this.servers.find(s => s.id === serverDisplayId);
+                if (!server) return;
+
+                const logsContentDiv = document.getElementById(`spacelift-logs-content-${serverDisplayId}`);
+                if (!logsContentDiv) return;
+
+                logsContentDiv.innerHTML = '<div style="color: #ffff00;">🔄 Loading run history...</div>';
+
+                try {
+                    // Get logs for both OpenTofu and Ansible stacks
+                    const logPromises = [];
+                    
+                    if (server.opentofu) {
+                        logPromises.push(
+                            this.apiCall(`/servers/${server.opentofu.id}/spacelift-logs`, 'GET')
+                                .then(response => ({ type: 'opentofu', stackName: server.opentofu.name, ...response }))
+                        );
+                    }
+                    
+                    if (server.ansible) {
+                        logPromises.push(
+                            this.apiCall(`/servers/${server.ansible.id}/spacelift-logs`, 'GET')
+                                .then(response => ({ type: 'ansible', stackName: server.ansible.name, ...response }))
+                        );
+                    }
+
+                    const results = await Promise.all(logPromises);
+                    
+                    let logsHtml = '';
+                    results.forEach(result => {
+                        if (result.success && result.logs) {
+                            logsHtml += `
+                                <div style="margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px;">
+                                    <div style="color: #00ffff; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>=== ${result.type.toUpperCase()} STACK ===</span>
+                                        <a href="https://spacelift-solutions.app.spacelift.io/stack/${result.type === 'opentofu' ? server.opentofu.id : server.ansible.id}" 
+                                           target="_blank" 
+                                           style="color: #00ffff; font-size: 0.8em; text-decoration: underline;">
+                                            View in Spacelift ↗
+                                        </a>
+                                    </div>
+                                    <div style="color: #00ff00; white-space: pre-wrap; line-height: 1.2; font-size: 0.9em;">
+                                        ${result.logs}
+                                    </div>
+                                    ${result.note ? `
+                                        <div style="color: #ffaa00; font-style: italic; margin-top: 8px; font-size: 0.8em;">
+                                            💡 ${result.note}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        } else {
+                            logsHtml += `
+                                <div style="color: #ff4444; margin-bottom: 15px; padding: 8px; border: 1px solid #ff4444; border-radius: 4px;">
+                                    <strong>${result.type.toUpperCase()}:</strong> ${result.error || 'No logs available'}
+                                </div>
+                            `;
+                        }
+                    });
+
+                    if (!logsHtml) {
+                        logsHtml = '<div style="color: #888;">No stack information available</div>';
+                    }
+
+                    logsContentDiv.innerHTML = logsHtml;
+                    
+                    // Scroll to bottom
+                    logsContentDiv.scrollTop = logsContentDiv.scrollHeight;
+
+                } catch (error) {
+                    logsContentDiv.innerHTML = `
+                        <div style="color: #ff4444; padding: 10px; border: 1px solid #ff4444; border-radius: 4px;">
+                            ❌ Failed to load logs: ${error.message}
+                            <br><br>
+                            <div style="color: #ffaa00; font-size: 0.9em;">
+                                💡 You can view detailed logs directly in the Spacelift UI:
+                                <br>
+                                ${server.opentofu ? `• <a href="https://spacelift-solutions.app.spacelift.io/stack/${server.opentofu.id}" target="_blank" style="color: #00ffff;">OpenTofu Stack ↗</a><br>` : ''}
+                                ${server.ansible ? `• <a href="https://spacelift-solutions.app.spacelift.io/stack/${server.ansible.id}" target="_blank" style="color: #00ffff;">Ansible Stack ↗</a>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            showDetailedStatus(statusUpdates) {
+                const statusElement = document.getElementById('status-message');
+                statusElement.style.display = 'block';
+                statusElement.style.backgroundColor = '#f7fafc';
+                statusElement.style.color = '#2d3748';
+                statusElement.style.borderColor = '#e2e8f0';
+                statusElement.style.maxHeight = '400px';
+                statusElement.style.overflowY = 'auto';
+                
+                // Create detailed status display
+                const statusHtml = `
+                    <div style="text-align: left;">
+                        <h4 style="margin: 0 0 10px 0; text-align: center;">🔄 Deletion Progress</h4>
+                        <div style="font-family: monospace; font-size: 0.9em;">
+                            ${statusUpdates.map(update => `
+                                <div style="margin: 5px 0; padding: 5px; border-radius: 4px; background: ${this.getUpdateBackgroundColor(update.type)};">
+                                    <span style="color: ${this.getUpdateTextColor(update.type)}; font-weight: bold;">
+                                        ${this.getUpdateIcon(update.type)}
+                                    </span>
+                                    <span style="color: #718096; font-size: 0.8em;">
+                                        ${new Date(update.timestamp).toLocaleTimeString()}
+                                    </span>
+                                    <br>
+                                    <span style="color: #2d3748;">
+                                        ${update.message}
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="text-align: center; margin-top: 15px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                            <strong style="color: #38a169;">✅ Deletion process completed!</strong><br>
+                            <span style="color: #718096; font-size: 0.9em;">Check Spacelift for detailed logs</span>
+                        </div>
+                    </div>
+                `;
+                
+                statusElement.innerHTML = statusHtml;
+                
+                // Auto-hide after 15 seconds
+                setTimeout(() => {
+                    if (statusElement.style.display === 'block') {
+                        statusElement.style.display = 'none';
+                    }
+                }, 15000);
+            }
+
+            getUpdateIcon(type) {
+                switch (type) {
+                    case 'success': return '✅';
+                    case 'error': return '❌';
+                    case 'warning': return '⚠️';
+                    case 'info': return 'ℹ️';
+                    default: return '•';
+                }
+            }
+
+            getUpdateBackgroundColor(type) {
+                switch (type) {
+                    case 'success': return '#f0fff4';
+                    case 'error': return '#fed7d7';
+                    case 'warning': return '#fefcbf';
+                    case 'info': return '#ebf8ff';
+                    default: return '#f7fafc';
+                }
+            }
+
+            getUpdateTextColor(type) {
+                switch (type) {
+                    case 'success': return '#38a169';
+                    case 'error': return '#e53e3e';
+                    case 'warning': return '#d69e2e';
+                    case 'info': return '#3182ce';
+                    default: return '#4a5568';
+                }
+            }
+
+            async apiCall(endpoint, method = 'GET', data = null) {
+                try {
+                    const options = {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    };
+
+                    if (data) {
+                        options.body = JSON.stringify(data);
+                    }
+
+                    const response = await fetch(this.apiBaseUrl + endpoint, options);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('API call failed:', error);
+                    throw error;
+                }
+            }
+
+            showStatus(element, type, message) {
+                element.className = `status ${type}`;
+                element.textContent = message;
+                element.classList.remove('hidden');
+            }
+
+            showGlobalStatus(type, message) {
+                const statusElement = document.getElementById('status-message');
+                statusElement.className = '';
+                statusElement.style.display = 'block';
+                
+                if (type === 'success') {
+                    statusElement.style.backgroundColor = '#c6f6d5';
+                    statusElement.style.color = '#22543d';
+                    statusElement.style.borderColor = '#9ae6b4';
+                } else if (type === 'error') {
+                    statusElement.style.backgroundColor = '#fed7d7';
+                    statusElement.style.color = '#742a2a';
+                    statusElement.style.borderColor = '#fc8181';
+                } else if (type === 'loading') {
+                    statusElement.style.backgroundColor = '#bee3f8';
+                    statusElement.style.color = '#2a4365';
+                    statusElement.style.borderColor = '#90cdf4';
+                }
+                
+                statusElement.textContent = message;
+                
+                // Auto-hide success and error messages after 10 seconds
+                if (type !== 'loading') {
+                    setTimeout(() => {
+                        if (statusElement.style.display === 'block') {
+                            statusElement.style.display = 'none';
+                        }
+                    }, 10000);
+                }
+            }
+        }
+
+        // Initialize the manager when the page loads
+        const manager = new MinecraftServerManager();
+    </script>
+</body>
+</html>
