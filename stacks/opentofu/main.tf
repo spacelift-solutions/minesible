@@ -76,7 +76,7 @@ resource "aws_s3_bucket" "minecraft_saves" {
 }
 
 resource "random_id" "bucket_id" {
-  byte_length = 4
+  byte_length = 5
 }
 
 resource "aws_iam_role" "ec2_s3_access" {
