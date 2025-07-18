@@ -15,10 +15,16 @@ app.use(express.json());
 
 
 
-// Spacelift API configuration
+// Spacelift API configuration | VERCEL REMOVED STATIC VARs for Key and Secret
 const SPACELIFT_API_URL = process.env.SPACELIFT_API_ENDPOINT || 'https://spacelift-solutions.app.spacelift.io/graphql';
-const SPACELIFT_API_KEY_ID = process.env.SPACELIFT_API_KEY_ID || '01K0BCE3B7H4TFN9XGEKACZRBQ';
-const SPACELIFT_API_KEY_SECRET = process.env.SPACELIFT_API_KEY_SECRET || '9caadb50b2354a0b8e51c57fe8c3057f48fff537f2dd68252912ea16d465e7c9';
+
+// Validation for Key and Secret: | VERCEL ADD
+if (!SPACELIFT_API_KEY_ID || !SPACELIFT_API_KEY_SECRET) {
+    console.error('Missing required environment variables:');
+    console.error('- SPACELIFT_API_KEY_ID');
+    console.error('- SPACELIFT_API_KEY_SECRET');
+    process.exit(1);
+}
 
 if (!SPACELIFT_API_KEY_ID || !SPACELIFT_API_KEY_SECRET) {
     console.error('SPACELIFT_API_KEY_ID and SPACELIFT_API_KEY_SECRET environment variables are required');
