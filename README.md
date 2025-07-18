@@ -1,4 +1,8 @@
-# 🪓 Minesible
+<div align="center">
+  <img src="https://i.imgur.com/PNqflHV.png" alt="Minesible - The power of OpenTofu + Ansible" />
+</div>
+
+# Minesible
 
 **Minesible** is a scalable, on-demand **Minecraft server deployment** using **OpenTofu + Ansible + Spacelift**.  
 Spin up your own Minecraft server in minutes, with **persistent world saves to S3** even after infra teardown.
