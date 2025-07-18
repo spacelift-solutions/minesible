@@ -6,9 +6,14 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Export for VERCEL
+module.exports = app;
+
 // Middleware
 app.use(express.json());
-app.use(express.static('public'));
+//app.use(express.static('public')); - REMOVED FOR VERCEL
+
+
 
 // Spacelift API configuration
 const SPACELIFT_API_URL = process.env.SPACELIFT_API_ENDPOINT || 'https://spacelift-solutions.app.spacelift.io/graphql';
@@ -1305,10 +1310,10 @@ app.get('/api/servers/:serverId', async (req, res) => {
     }
 });
 
-// Serve main page
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+// Serve main page -  REMOVED FOR VERCEL
+//app.get('/', (req, res) => {
+//    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+//});
 
 // Health check
 app.get('/health', (req, res) => {
@@ -1325,9 +1330,11 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Open http://localhost:${PORT} to access the Minecraft Server Manager`);
-});
+if (process.env.NODE_ENV !== 'production') { // VERCEL ADD
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Open http://localhost:${PORT} to access the Minecraft Server Manager`);
+    }); // VERCEL ADD
+} // VERCEL ADD
 
 module.exports = app;
