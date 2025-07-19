@@ -1056,19 +1056,19 @@
                 logsContentDiv.innerHTML = '<div style="color: #ffff00;">🔄 Loading run history...</div>';
 
                 try {
-                    // Get logs for both OpenTofu and Ansible stacks
+                    // Get logs for both OpenTofu and Ansible stacks using the new API endpoint
                     const logPromises = [];
                     
                     if (server.opentofu) {
                         logPromises.push(
-                            this.apiCall(`/servers/${server.opentofu.id}/spacelift-logs`, 'GET')
+                            this.apiCall(`/logs?stackId=${server.opentofu.id}`, 'GET')
                                 .then(response => ({ type: 'opentofu', stackName: server.opentofu.name, ...response }))
                         );
                     }
                     
                     if (server.ansible) {
                         logPromises.push(
-                            this.apiCall(`/servers/${server.ansible.id}/spacelift-logs`, 'GET')
+                            this.apiCall(`/logs?stackId=${server.ansible.id}`, 'GET')
                                 .then(response => ({ type: 'ansible', stackName: server.ansible.name, ...response }))
                         );
                     }
@@ -1082,7 +1082,7 @@
                                 <div style="margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px;">
                                     <div style="color: #00ffff; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
                                         <span>=== ${result.type.toUpperCase()} STACK ===</span>
-                                        <a href="https://spacelift-solutions.app.spacelift.io/stack/${result.type === 'opentofu' ? server.opentofu.id : server.ansible.id}" 
+                                        <a href="${result.spaceliftUrl || 'https://spacelift-solutions.app.spacelift.io/stack/' + (result.type === 'opentofu' ? server.opentofu.id : server.ansible.id)}" 
                                            target="_blank" 
                                            style="color: #00ffff; font-size: 0.8em; text-decoration: underline;">
                                             View in Spacelift ↗
@@ -1102,6 +1102,8 @@
                             logsHtml += `
                                 <div style="color: #ff4444; margin-bottom: 15px; padding: 8px; border: 1px solid #ff4444; border-radius: 4px;">
                                     <strong>${result.type.toUpperCase()}:</strong> ${result.error || 'No logs available'}
+                                    ${result.suggestion ? `<br><em style="color: #ffaa00;">${result.suggestion}</em>` : ''}
+                                    ${result.spaceliftUrl ? `<br><a href="${result.spaceliftUrl}" target="_blank" style="color: #00ffff;">View in Spacelift ↗</a>` : ''}
                                 </div>
                             `;
                         }
