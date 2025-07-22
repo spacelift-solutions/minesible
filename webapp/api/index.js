@@ -103,7 +103,7 @@ async function spaceliftQuery(query, variables = {}) {
 }
 
 // Blueprint ID
-const BLUEPRINT_ID = 'minesible-blueprint-01K0CMV29TNE4365427CKCMFH5';
+const BLUEPRINT_ID = 'minesible-blueprint-v2-01K0T0Z6H7XYTDEN4ST1D4SEXE';
 
 // API Routes
 
