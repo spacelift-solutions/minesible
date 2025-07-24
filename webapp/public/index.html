@@ -684,7 +684,7 @@
                     // Handle Unix timestamps (if the number is around 10 digits, it's seconds)
                     if (typeof dateString === 'number') {
                         // If it's a 10-digit number, it's seconds; if 13 digits, it's milliseconds
-                        date = new Date(dateString > 1000000000000 ? dateValue : dateValue * 1000);
+                        date = new Date(dateString > 1000000000000 ? dateString : dateString * 1000);
                     } else if (typeof dateString === 'string') {
                         // Handle string dates
                         date = new Date(dateString);
