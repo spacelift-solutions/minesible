@@ -238,10 +238,6 @@ module.exports = async (req, res) => {
                             value
                         }
                         labels
-                        blueprintInputs {
-                          key
-                          value
-                        }
                 }
             `;
 
