@@ -677,17 +677,17 @@
                 
                 // Fix date display - handle invalid dates
                 const formatDate = (dateString) => {
-                    if (!dateValue) return 'Unknown';
+                    if (!dateString) return 'Unknown';
 
                     let date;
                     
                     // Handle Unix timestamps (if the number is around 10 digits, it's seconds)
-                    if (typeof dateValue === 'number') {
+                    if (typeof dateString === 'number') {
                         // If it's a 10-digit number, it's seconds; if 13 digits, it's milliseconds
-                        date = new Date(dateValue > 1000000000000 ? dateValue : dateValue * 1000);
-                    } else if (typeof dateValue === 'string') {
+                        date = new Date(dateString > 1000000000000 ? dateValue : dateValue * 1000);
+                    } else if (typeof dateString === 'string') {
                         // Handle string dates
-                        date = new Date(dateValue);
+                        date = new Date(dateString);
                     } else {
                         return 'Unknown';
                     }
