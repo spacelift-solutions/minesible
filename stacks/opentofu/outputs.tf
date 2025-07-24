@@ -13,3 +13,7 @@ output "motd" {
 output "max_players" {
   value = var.max_players
 }
+
+output "instance_type" {
+  value = var.instance_type
+}
