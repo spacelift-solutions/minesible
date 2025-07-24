@@ -141,9 +141,17 @@ function groupStacksByBlueprint(stacks) {
                     return acc;
                 }, {}) : {};
                 
+                // 🟢 NEW: Extract blueprint inputs from the stack
+                const blueprintInputs = stack.blueprintInputs ? stack.blueprintInputs.reduce((acc, input) => {
+                    acc[input.key] = input.value;
+                    return acc;
+                }, {}) : {};
+                
                 groups[groupKey].ip = outputs.ec2_ip || null;
-                groups[groupKey].instanceType = outputs.instance_type || 'unknown';
-                groups[groupKey].maxPlayers = outputs.max_players || 'unknown';
+                
+                // 🟢 FIXED: Try blueprint inputs first, then outputs, then default
+                groups[groupKey].instanceType = blueprintInputs.instance_type || outputs.instance_type || 'unknown';
+                groups[groupKey].maxPlayers = blueprintInputs.max_players || outputs.max_players || 'unknown';
                 groups[groupKey].created = stack.createdAt;
                 
             } else if (stack.name.toLowerCase().includes('ansible')) {
@@ -230,7 +238,10 @@ module.exports = async (req, res) => {
                             value
                         }
                         labels
-                    }
+                        blueprintInputs {
+                          key
+                          value
+                        }
                 }
             `;
 
