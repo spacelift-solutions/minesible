@@ -238,6 +238,7 @@ module.exports = async (req, res) => {
                             value
                         }
                         labels
+                    }
                 }
             `;
 
