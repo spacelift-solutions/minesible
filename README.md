@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://i.imgur.com/PNqflHV.png)" alt="Minesible - The power of OpenTofu + Ansible" />
+  <img src="https://i.imgur.com/nnwVuAt.png)" alt="Minesible - The power of OpenTofu + Ansible" />
 </div>
 
 # Minesible
