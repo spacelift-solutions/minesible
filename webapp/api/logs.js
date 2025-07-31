@@ -240,8 +240,6 @@ Visit the Spacelift UI: https://spacelift-solutions.app.spacelift.io/stack/${sta
 === API LIMITATIONS ===
 The Spacelift GraphQL API has limited log access. For full logs:
 1. Click the link above to view in Spacelift UI
-2. Use the Spacelift CLI: 'spacelift stack logs ${stackId}'
-3. Check the Functions tab in Spacelift for real-time updates`;
 
         return res.json({
             success: true,
