@@ -239,7 +239,7 @@ Visit the Spacelift UI: https://spacelift-solutions.app.spacelift.io/stack/${sta
 
 === API LIMITATIONS ===
 The Spacelift GraphQL API has limited log access. For full logs:
-1. Click the link above to view in Spacelift UI
+1. Click the link above to view in Spacelift UI;
 
         return res.json({
             success: true,
