@@ -13,8 +13,8 @@ Spin up your own Minecraft server in minutes, with **persistent world saves to S
 
 ✅ Deploy Minecraft servers on demand  
 ✅ Automated configuration with Ansible  
-✅ Persist world saves to S3 buckets (passed as a TF_VAR 'TF_VAR_minecraft_s3_bucket' into spacelift)
-✅ Uses Spacelift stack dependencies for clean IaC orchestration  
+✅ Persist world saves to S3 buckets (passed as a TF_VAR 'TF_VAR_minecraft_s3_bucket' into spacelift)  
+✅ Uses Spacelift stack dependencies for clean IaC orchestration
 
 ---
 
