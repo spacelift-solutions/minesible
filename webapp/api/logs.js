@@ -77,23 +77,27 @@ async function spaceliftQuery(query, variables = {}) {
 }
 
 module.exports = async (req, res) => {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    console.log('=== LOGS FUNCTION STARTED ===');
+    console.log('Method:', req.method);
+    console.log('Query:', req.query);
     
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'GET') {
-        return res.status(405).json({
-            success: false,
-            error: 'Method not allowed. Use GET.'
-        });
-    }
-
     try {
+        // Set CORS headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
+
+        if (req.method !== 'GET') {
+            return res.status(405).json({
+                success: false,
+                error: 'Method not allowed. Use GET.'
+            });
+        }
+
         // Get stackId from query parameter
         const { stackId } = req.query;
         
@@ -109,20 +113,25 @@ module.exports = async (req, res) => {
 
         // Helper function to format dates properly
         const formatDate = (dateValue) => {
-            if (!dateValue) return 'Unknown';
-            
-            let date;
-            if (typeof dateValue === 'number') {
-                date = new Date(dateValue > 1000000000000 ? dateValue : dateValue * 1000);
-            } else {
-                date = new Date(dateValue);
+            try {
+                if (!dateValue) return 'Unknown';
+                
+                let date;
+                if (typeof dateValue === 'number') {
+                    date = new Date(dateValue > 1000000000000 ? dateValue : dateValue * 1000);
+                } else {
+                    date = new Date(dateValue);
+                }
+                
+                if (isNaN(date.getTime()) || date.getFullYear() < 2020) {
+                    return 'Invalid date';
+                }
+                
+                return date.toLocaleString();
+            } catch (error) {
+                console.error('Date formatting error:', error);
+                return 'Date error';
             }
-            
-            if (isNaN(date.getTime()) || date.getFullYear() < 2020) {
-                return 'Invalid date';
-            }
-            
-            return date.toLocaleString();
         };
 
         // Try to get stack runs with error handling
@@ -148,7 +157,9 @@ module.exports = async (req, res) => {
 
         let stackResult;
         try {
+            console.log('Attempting to get stack with runs...');
             stackResult = await spaceliftQuery(getStackWithRunsQuery, { stackId });
+            console.log('Stack with runs query successful');
         } catch (runsError) {
             console.log('Failed to get runs, trying basic stack info:', runsError.message);
             
@@ -166,7 +177,9 @@ module.exports = async (req, res) => {
             
             try {
                 stackResult = await spaceliftQuery(basicStackQuery, { id: stackId });
+                console.log('Basic stack query successful');
             } catch (basicError) {
+                console.error('Both queries failed:', basicError.message);
                 return res.status(500).json({
                     success: false,
                     error: `Failed to fetch stack information: ${basicError.message}`
@@ -190,58 +203,57 @@ module.exports = async (req, res) => {
         
         console.log('Found runs:', runs.length);
 
-        // Create informative response
-        let logInfo = `=== STACK INFORMATION ===
-Stack Name: ${stack.name}
-Stack ID: ${stack.id}
-Current State: ${stack.state}
-Created: ${formatDate(stack.createdAt)}
+        // Create informative response with safe string handling
+        let logInfo = '';
+        
+        try {
+            logInfo += `=== STACK INFORMATION ===\n`;
+            logInfo += `Stack Name: ${stack.name}\n`;
+            logInfo += `Stack ID: ${stack.id}\n`;
+            logInfo += `Current State: ${stack.state}\n`;
+            logInfo += `Created: ${formatDate(stack.createdAt)}\n\n`;
 
-`;
+            if (latestRun) {
+                logInfo += `=== LATEST RUN ===\n`;
+                logInfo += `Run ID: ${latestRun.id}\n`;
+                logInfo += `Type: ${latestRun.type}\n`;
+                logInfo += `State: ${latestRun.state}\n`;
+                logInfo += `Branch: ${latestRun.branch || 'N/A'}\n`;
+                logInfo += `Triggered By: ${latestRun.triggeredBy || 'Unknown'}\n`;
+                logInfo += `Started: ${formatDate(latestRun.createdAt)}\n`;
+                logInfo += `${latestRun.finished ? `Finished: ${formatDate(latestRun.finished)}` : 'Still running...'}\n\n`;
+            }
 
-        if (latestRun) {
-            logInfo += `=== LATEST RUN ===
-Run ID: ${latestRun.id}
-Type: ${latestRun.type}
-State: ${latestRun.state}
-Branch: ${latestRun.branch || 'N/A'}
-Triggered By: ${latestRun.triggeredBy || 'Unknown'}
-Started: ${formatDate(latestRun.createdAt)}
-${latestRun.finished ? `Finished: ${formatDate(latestRun.finished)}` : 'Still running...'}
+            if (runs.length > 1) {
+                logInfo += `=== RECENT RUNS ===\n`;
+                runs.slice(1, 6).forEach((run, index) => {
+                    logInfo += `${index + 2}. ${run.type} - ${run.state} - ${formatDate(run.createdAt)}\n`;
+                });
+                logInfo += `\n`;
+            } else if (runs.length === 0) {
+                logInfo += `=== RUN HISTORY ===\n`;
+                logInfo += `No run history available through API.\n\n`;
+            }
 
-`;
+            logInfo += `=== DETAILED LOGS ===\n`;
+            logInfo += `For complete execution logs with real-time updates, including:\n`;
+            logInfo += `• Complete Terraform/OpenTofu plan and apply output\n`;
+            logInfo += `• Ansible playbook execution details\n`;
+            logInfo += `• Error messages and troubleshooting information\n`;
+            logInfo += `• Live streaming during active runs\n\n`;
+            logInfo += `Visit the Spacelift UI: https://spacelift-solutions.app.spacelift.io/stack/${stackId}\n\n`;
+            logInfo += `=== API LIMITATIONS ===\n`;
+            logInfo += `The Spacelift GraphQL API has limited log access. For full logs:\n`;
+            logInfo += `1. Click the link above to view in Spacelift UI`;
+
+        } catch (stringError) {
+            console.error('String building error:', stringError);
+            logInfo = `Error building log information: ${stringError.message}`;
         }
 
-        if (runs.length > 1) {
-            logInfo += `=== RECENT RUNS ===
-`;
-            runs.slice(1, 6).forEach((run, index) => {
-                logInfo += `${index + 2}. ${run.type} - ${run.state} - ${formatDate(run.createdAt)}
-`;
-            });
-            logInfo += `
-`;
-        } else if (runs.length === 0) {
-            logInfo += `=== RUN HISTORY ===
-No run history available through API.
+        console.log('Successfully built log info, returning response');
 
-`;
-        }
-
-        logInfo += `=== DETAILED LOGS ===
-For complete execution logs with real-time updates, including:
-• Complete Terraform/OpenTofu plan and apply output
-• Ansible playbook execution details
-• Error messages and troubleshooting information
-• Live streaming during active runs
-
-Visit the Spacelift UI: https://spacelift-solutions.app.spacelift.io/stack/${stackId}
-
-=== API LIMITATIONS ===
-The Spacelift GraphQL API has limited log access. For full logs:
-1. Click the link above to view in Spacelift UI;
-
-        return res.json({
+        return res.status(200).json({
             success: true,
             logs: logInfo,
             stackName: stack.name,
@@ -258,13 +270,17 @@ The Spacelift GraphQL API has limited log access. For full logs:
         });
 
     } catch (error) {
-        console.error('Error fetching Spacelift logs:', error.message);
+        console.error('=== FUNCTION ERROR ===');
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
         
         return res.status(500).json({
             success: false,
-            error: error.message,
-            suggestion: 'Try accessing logs directly in the Spacelift UI',
-            spaceliftUrl: req.query.stackId ? `https://spacelift-solutions.app.spacelift.io/stack/${req.query.stackId}` : null
+            error: error.message || 'Internal server error',
+            debug: {
+                stack: error.stack,
+                name: error.name
+            }
         });
     }
 };
