@@ -64,10 +64,10 @@ minesible/
 
 ### ✨ Future Ideas
 
-- Self-service ready for customer blueprints  
-- Supports scheduled world backups (using scheduling via private workers)
+- :white_check_mark: Self-service ready for customer blueprints *done
+- :white_check_mark: Supports scheduled world backups (using scheduling via private workers) *done
 - Region-specific variable (eg. options like us-east2)
-- Instance type variable (eg. options like t2.micro)
+- :white_check_mark: Instance type variable (eg. options like t2.micro) *done
 - Automatic Discord status notifications
 
 ---
