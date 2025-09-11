@@ -7,7 +7,7 @@ const SPACELIFT_API_KEY_ID = process.env.SPACELIFT_API_KEY_ID;
 const SPACELIFT_API_KEY_SECRET = process.env.SPACELIFT_API_KEY_SECRET;
 
 // Blueprint ID
-const BLUEPRINT_ID = process.env.BLUEPRINT_ID || 'minesible-blueprint-webinar-01K1GRYDY24BS8AQAT97GCVR85';
+const BLUEPRINT_ID = process.env.BLUEPRINT_ID || 'minesible-blueprint-01K4X20PX3PAVEMBW3AEE5DJET';
 
 // Validate required environment variables
 if (!SPACELIFT_API_URL || !SPACELIFT_API_KEY_ID || !SPACELIFT_API_KEY_SECRET) {
