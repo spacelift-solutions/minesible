@@ -14,5 +14,5 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "s3-bucket" {
-  bucket = "kals-bucket-3321233"
+  bucket = "kals-bucket-332sdf1233"
 }
