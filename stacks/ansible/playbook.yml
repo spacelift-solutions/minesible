@@ -137,6 +137,13 @@
       ignore_errors: true
       failed_when: false
 
+    - name: Fix ownership of minecraft directory
+      file:
+        path: /home/ec2-user/minecraft
+        owner: ec2-user
+        group: ec2-user
+        recurse: yes
+
     - name: Start Minecraft Server
       shell: |
         cd /home/ec2-user/minecraft
