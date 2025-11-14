@@ -140,3 +140,4 @@ resource "aws_iam_instance_profile" "ec2_profile" {
     Name = "minecraft-instance-profile-${random_id.stack_id.hex}"
   }
 }
+
