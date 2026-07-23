@@ -1,9 +1,9 @@
 - hosts: minecraft
   become: yes
   tasks:
-    - name: Download and install Java 21
+    - name: Download and install Java 23
       shell: |
-        curl -L -o /tmp/corretto.tar.gz https://corretto.aws/downloads/latest/amazon-corretto-21-x64-linux-jdk.tar.gz
+        curl -L -o /tmp/corretto.tar.gz https://corretto.aws/downloads/latest/amazon-corretto-23-x64-linux-jdk.tar.gz
         mkdir -p /opt/corretto
         tar -xzf /tmp/corretto.tar.gz -C /opt/corretto --strip-components=1
         alternatives --install /usr/bin/java java /opt/corretto/bin/java 1
@@ -11,7 +11,7 @@
         executable: /bin/bash
       when: not ansible_check_mode
 
-    - name: Set Java 21 as default
+    - name: Set Java 23 as default
       shell: |
         alternatives --install /usr/bin/java java /opt/corretto/bin/java 1
         alternatives --set java /opt/corretto/bin/java
