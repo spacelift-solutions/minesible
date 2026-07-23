@@ -44,6 +44,10 @@
       get_url:
         url: "https://piston-data.mojang.com/v1/objects/05e4b48fbc01f0385adb74bcff9751d34552486c/server.jar"
         dest: /home/ec2-user/minecraft/server.jar
+        owner: ec2-user
+        group: ec2-user
+        mode: '0644'
+        force: yes
       when: not ansible_check_mode
 
     - name: Sync world from S3 bucket into running EC2 instance
