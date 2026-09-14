@@ -38,7 +38,7 @@ resource "aws_security_group" "minecraft_sg" {
   }
 
   tags = {
-    Name = "minecraft-sg-${random_id.stack_id.hex}"
+    Name = "minecraft-sg-1-${random_id.stack_id.hex}"
   }
 }
 
